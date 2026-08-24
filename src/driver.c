@@ -2296,11 +2296,11 @@ V-V                           TP-027
 	//DRIVER( ssf2xj )     /* Capcom, Super Street Fighter II X: Grand Master Challenge (Japan 940311) */
 	//DRIVER( ssf2xjr1 )   /* Capcom, Super Street Fighter II X: Grand Master Challenge (Japan 940223) */
 	//DRIVER( ssf2xjr1r )  /* Capcom, Super Street Fighter II X: Grand Master Challenge (Japan 940223 rent version) */
-	DRIVER( avsp )       /* Capcom, Alien vs. Predator (Euro 940520) */
+	//DRIVER( avsp )       /* Capcom, Alien vs. Predator (Euro 940520) */
 	DRIVER( avspu )      /* Capcom, Alien vs. Predator (USA 940520) */
-	DRIVER( avspj )      /* Capcom, Alien vs. Predator (Japan 940520) */
-	DRIVER( avspa )      /* Capcom, Alien vs. Predator (Asia 940520) */
-	DRIVER( avsph )      /* Capcom, Alien vs. Predator (Hispanic 940520) */
+	//DRIVER( avspj )      /* Capcom, Alien vs. Predator (Japan 940520) */
+	//DRIVER( avspa )      /* Capcom, Alien vs. Predator (Asia 940520) */
+	//DRIVER( avsph )      /* Capcom, Alien vs. Predator (Hispanic 940520) */
 	//DRIVER( dstlk )      /* Capcom, Darkstalkers: The Night Warriors (Euro 940705) */
 	//DRIVER( dstlku )     /* Capcom, Darkstalkers: The Night Warriors (USA 940818) */
 	//DRIVER( dstlkur1 )   /* Capcom, Darkstalkers: The Night Warriors (USA 940705) */
@@ -2531,7 +2531,7 @@ V-V                           TP-027
 	//DRIVER( ssf2ud )     /* bootleg, Super Street Fighter II: The New Challengers (USA 930911 Phoenix Edition) (bootleg) */
 	//DRIVER( ssf2tbd )    /* bootleg, Super Street Fighter II: The Tournament Battle (World 931119 Phoenix Edition) (bootleg) */
 	//DRIVER( armwar1d )   /* bootleg, Armored Warriors (Euro 941011 Phoenix Edition) (bootleg) */
-	DRIVER( avspd )      /* bootleg, Alien vs. Predator (Euro 940520 Phoenix Edition) (bootleg) */
+	//DRIVER( avspd )      /* bootleg, Alien vs. Predator (Euro 940520 Phoenix Edition) (bootleg) */
 	//DRIVER( dstlku1d )   /* bootleg, Darkstalkers: The Night Warriors (USA 940705 Phoenix Edition) (bootleg) */
 	//DRIVER( ringdstd )   /* bootleg, Ring of Destruction: Slammasters II (Euro 940902 Phoenix Edition) (bootleg) */
 	//DRIVER( ssf2tad )    /* bootleg, Super Street Fighter II Turbo (Asia 940223 Phoenix Edition) (bootleg) */
@@ -3842,17 +3842,17 @@ BOMULEUL CHAJARA SEGA ST-V  1997/04/11
 	//DRIVER( blockhl )	/* GX973 (c) 1989 */
 	//DRIVER( quarth )	/* GX973 (c) 1989 (Japan) */
 	DRIVER( aliens )	/* GX875 (c) 1990 (World) */
-	DRIVER( aliens2 )	/* GX875 (c) 1990 (World) */
-	DRIVER( aliensu )	/* GX875 (c) 1990 (US) */
+	//DRIVER( aliens2 )	/* GX875 (c) 1990 (World) */
+	//DRIVER( aliensu )	/* GX875 (c) 1990 (US) */
 	//DRIVER( aliensj )	/* GX875 (c) 1990 (Japan) */
 	//DRIVER( surpratk )	/* GX911 (c) 1990 (Japan) */
 	//DRIVER( parodius )	/* GX955 (c) 1990 (World) */
 	//DRIVER( parodisj )	/* GX955 (c) 1990 (Japan) */
 	//DRIVER( rollerg )	/* GX999 (c) 1991 (US) */
 	//DRIVER( rollergj )	/* GX999 (c) 1991 (Japan) */
-	DRIVER( simpsons )	/* GX072 (c) 1991 */
-	DRIVER( simpsn2p )	/* GX072 (c) 1991 */
-	DRIVER( simps2pa )	/* GX072 (c) 1991 */
+	//DRIVER( simpsons )	/* GX072 (c) 1991 */
+	//DRIVER( simpsn2p )	/* GX072 (c) 1991 */
+	//DRIVER( simps2pa )	/* GX072 (c) 1991 */
 	DRIVER( simps2pj )	/* GX072 (c) 1991 (Japan) */
 	//DRIVER( esckids )	/* GX975 (c) 1991 (Asia) */
 	//DRIVER( esckidsj )	/* GX975 (c) 1991 (Japan) */
