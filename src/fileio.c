@@ -264,6 +264,71 @@ void osd_get_path(int pathtype, char* path)
      if (!path_mkdir(path)) log_cb(RETRO_LOG_ERROR, LOGPRE "(osd_get_path) failed to create path:  %s\n", path);
 }
 
+#include <dirent.h>
+#include <strings.h>
+
+/******************************************************************************
+ Helper: Case-insensitive filename resolver for PS2 / POSIX paths
+******************************************************************************/
+static int resolve_case_insensitive_path(char *path_buffer, size_t max_len)
+{
+   char dir_path[PATH_MAX_LENGTH];
+   char target_file[PATH_MAX_LENGTH];
+   char *last_slash;
+   DIR *dir;
+   struct dirent *entry;
+   int found = 0;
+
+   // Separate the directory path from the target filename
+   last_slash = strrchr(path_buffer, '/');
+   if (!last_slash)
+      last_slash = strrchr(path_buffer, '\\');
+
+   if (!last_slash)
+   {
+      // If no slash, search in current directory '.'
+      strcpy(dir_path, ".");
+      strcpy(target_file, path_buffer);
+   }
+   else
+   {
+      size_t dirlen = last_slash - path_buffer;
+      if (dirlen >= sizeof(dir_path))
+         dirlen = sizeof(dir_path) - 1;
+      memcpy(dir_path, path_buffer, dirlen);
+      dir_path[dirlen] = '\0';
+      
+      strcpy(target_file, last_slash + 1);
+   }
+
+   // Open the directory to scan entries case-insensitively
+   dir = opendir(dir_path);
+   if (!dir)
+      return 0;
+
+   while ((entry = readdir(dir)) != NULL)
+   {
+      if (strcasecmp(entry->d_name, target_file) == 0)
+      {
+         // Match found! Reconstruct the exact path with correct casing
+         if (last_slash)
+         {
+            size_t prefix_len = last_slash - path_buffer + 1;
+            snprintf(path_buffer, max_len, "%.*s%s", (int)prefix_len, path_buffer, entry->d_name);
+         }
+         else
+         {
+            snprintf(path_buffer, max_len, "%s", entry->d_name);
+         }
+         found = 1;
+         break;
+      }
+   }
+
+   closedir(dir);
+   return found;
+}
+
 int osd_get_path_info(int pathtype, int pathindex, const char *filename)
 {
    char buffer[PATH_MAX_LENGTH];
@@ -276,7 +341,7 @@ int osd_get_path_info(int pathtype, int pathindex, const char *filename)
 
    if (path_is_directory(buffer))
    {
-       log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_get_path_info) path is directory\n");
+      log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_get_path_info) path is directory\n");
       return PATH_IS_DIRECTORY;
    }
    else if (filestream_exists(buffer))
@@ -284,6 +349,16 @@ int osd_get_path_info(int pathtype, int pathindex, const char *filename)
       log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_get_path_info) path is file\n");
       return PATH_IS_FILE;
    }
+   
+   /* Fallback: Try case-insensitive directory scan */
+   if (resolve_case_insensitive_path(buffer, sizeof(buffer)))
+   {
+      if (path_is_directory(buffer))
+         return PATH_IS_DIRECTORY;
+      else if (filestream_exists(buffer))
+         return PATH_IS_FILE;
+   }
+
    log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_get_path_info) path not found\n");
    return PATH_NOT_FOUND;
 }
@@ -298,6 +373,23 @@ FILE* osd_fopen(int pathtype, int pathindex, const char *filename, const char *m
    snprintf(buffer, PATH_MAX_LENGTH, "%s%c%s", currDir, PATH_DEFAULT_SLASH_C(), filename);
 
    out = fopen(buffer, mode);
+   
+   /* Fallback: If exact open fails, try resolving case-insensitively */
+   if (!out)
+   {
+      char icase_buffer[PATH_MAX_LENGTH];
+      snprintf(icase_buffer, sizeof(icase_buffer), "%s", buffer);
+      if (resolve_case_insensitive_path(icase_buffer, sizeof(icase_buffer)))
+      {
+         out = fopen(icase_buffer, mode);
+         if (out)
+         {
+            log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_fopen) opened file via case-insensitive fallback: %s\n", icase_buffer);
+            return out;
+         }
+      }
+   }
+
    if (out)  log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_fopen) opened the file:  %s\n", buffer);
    else  log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_fopen) failed to open file:  %s\n", buffer);
 
