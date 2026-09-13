@@ -1066,16 +1066,17 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
         /* now look for it within a ZIP file */
         if (!(flags & (FILEFLAG_OPENWRITE | FILEFLAG_NOZIP)))
         {
-            char zip_override[PATH_MAX_LENGTH];
-            const char *target_gamename = gamename;
-            
-            if (!strchr(gamename, '.')) {
-                snprintf(zip_override, sizeof(zip_override), "%s.zip", gamename);
-                target_gamename = zip_override;
+            char zip_gamename[PATH_MAX_LENGTH];
+            const char *zip_target = gamename;
+
+            if (pathtype == FILETYPE_ROM && !strchr(gamename, '.'))
+            {
+                snprintf(zip_gamename, sizeof(zip_gamename), "%s.zip", gamename);
+                zip_target = zip_gamename;
             }
 
-            /* first look for path/gamename.zip */
-            compose_path(name, target_gamename, NULL, "zip");
+            /* first look for path/gamename.zip (passing NULL as extension since .zip is in the name) */
+            compose_path(name, zip_target, NULL, NULL);
             log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s file\n", name);
 
             /* if the ZIP file exists, proceed */
