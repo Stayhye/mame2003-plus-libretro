@@ -1088,7 +1088,7 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
                 if (flags & FILEFLAG_VERIFY_ONLY)
                 {
                     UINT8 crcs[4];
-                    UINT32 crc = 0;
+                    unsigned int crc = 0;
 
                     /* Since this is a .ZIP file, we extract the CRC from the expected hash
                        (if any), so that we can load by CRC if needed. We must check that
@@ -1097,7 +1097,7 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
                     if (hash && hash_data_extract_binary_checksum(hash, HASH_CRC, crcs) != 0)
                     {
                         /* Store the CRC in a single DWORD */
-                        vcrC = ((unsigned long)crcs[0] << 24) |
+                        crc = ((unsigned long)crcs[0] << 24) |
                             ((unsigned long)crcs[1] << 16) |
                             ((unsigned long)crcs[2] <<  8) |
                             ((unsigned long)crcs[3] <<  0);
@@ -1123,6 +1123,7 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
                 else
                 {
                     int err;
+                    unsigned int ziplength;
 
                     /* Try loading the file */
                     err = load_zipped_file(pathtype, pathindex, name, tempname, &file.data, &ziplength);
