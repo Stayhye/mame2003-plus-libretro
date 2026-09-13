@@ -100,8 +100,9 @@ extern int errno;
 #endif
 
 
+/* PS2 Optimization: Reduced buffer size to 8192 bytes to save RAM */
 #ifndef UNZ_BUFSIZE
-#define UNZ_BUFSIZE (16384)
+#define UNZ_BUFSIZE (8192)
 #endif
 
 #ifndef UNZ_MAXFILENAMEINZIP
