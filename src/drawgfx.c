@@ -3518,7 +3518,7 @@ static INLINE void plotclip(struct mame_bitmap *bitmap,int x,int y,int pen,const
 
 void draw_crosshair(int player_number, struct mame_bitmap *bitmap,int x,int y,const struct rectangle *clip)
 {
-	unsigned long color,white;
+	unsigned long color,black,white;
 	int i;
 	static int inactive_xy [MAX_PLAYER_COUNT][3];
 
