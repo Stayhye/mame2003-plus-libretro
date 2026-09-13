@@ -62,6 +62,16 @@ struct malloc_info
 	void *ptr;
 };
 
+/***************************************************************************
+   mame_fopen_rom
+***************************************************************************/
+
+/* Similar to mame_fopen(,,FILETYPE_ROM), but lets you specify an expected checksum
+   (better encapsulation of the load by CRC used for ZIP files) */
+mame_file *mame_fopen_rom(const char *gamename, const char *filename, const char* exphash)
+{
+    return generic_fopen(FILETYPE_ROM, gamename, filename, exphash, FILEFLAG_OPENREAD | FILEFLAG_HASH);
+}
 
 /***************************************************************************
 	FLAC stuff
