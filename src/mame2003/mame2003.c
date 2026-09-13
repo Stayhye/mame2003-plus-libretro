@@ -271,7 +271,9 @@ bool retro_load_game(const struct retro_game_info *game)
     {
       log_cb(RETRO_LOG_INFO, LOGPRE "Driver index counter: %d. Matched game driver: %s\n",  driverIndex, needle->name);
       game_driver = needle;
-      options.romset_filename_noext = full_filename;
+      
+      /* Keep romset_filename_noext purely extension-less for NVRAM/config subsystems */
+      options.romset_filename_noext = strdup(driver_lookup);
       break;
     }
     if(driverIndex == total_drivers - 2) /* we could fix the total drives in drivers c but the it pointless its taken into account here */
@@ -283,6 +285,7 @@ bool retro_load_game(const struct retro_game_info *game)
     }
   }
 
+  free(full_filename);
   free(driver_lookup);
 
   if(!init_game(driverIndex))
@@ -344,7 +347,6 @@ bool retro_load_game(const struct retro_game_info *game)
 
   return false;
 }
-
 
 void retro_reset (void)
 {
