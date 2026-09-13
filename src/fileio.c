@@ -63,6 +63,16 @@ struct _mame_file
 static mame_file *generic_fopen(int pathtype, const char *gamename, const char *filename, const char* hash, UINT32 flags);
 static int checksum_file(int pathtype, int pathindex, const char *file, UINT8 **p, UINT64 *size, char* hash);
 
+/***************************************************************************
+   mame_fopen_rom
+***************************************************************************/
+
+/* Similar to mame_fopen(,,FILETYPE_ROM), but lets you specify an expected checksum
+   (better encapsulation of the load by CRC used for ZIP files) */
+mame_file *mame_fopen_rom(const char *gamename, const char *filename, const char* exphash)
+{
+    return generic_fopen(FILETYPE_ROM, gamename, filename, exphash, FILEFLAG_OPENREAD | FILEFLAG_HASH);
+}
 
 /***************************************************************************
 	mame_fopen
