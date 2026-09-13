@@ -1020,7 +1020,14 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
 	for (pathindex = pathstart; pathindex != pathstop; pathindex += pathinc)
 	{
 		char name[PATH_MAX_LENGTH];
-
+	
+	/* Inside generic_fopen in fileio.c, when handling roms/archives: */
+	if (filetype == FILETYPE_ROM && gamename && !strchr(gamename, '.'))
+	{
+		char zip_gamename[512];
+		snprintf(zip_gamename, sizeof(zip_gamename), "%s.zip", gamename);
+		gamename = zip_gamename;
+	}
 		/* ----------------- STEP 1: OPEN THE FILE RAW -------------------- */
 
 		/* first look for path/gamename as a directory */
