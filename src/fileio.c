@@ -374,19 +374,6 @@ FILE* osd_fopen(int pathtype, int pathindex, const char *filename, const char *m
 
    out = fopen(buffer, mode);
    
-   /* Fallback: If exact open fails, try appending .zip for ROM archives */
-   if (!out)
-   {
-      char zip_buffer[PATH_MAX_LENGTH];
-      snprintf(zip_buffer, sizeof(zip_buffer), "%s.zip", buffer);
-      out = fopen(zip_buffer, mode);
-      if (out)
-      {
-         log_cb(RETRO_LOG_DEBUG, LOGPRE "(osd_fopen) opened file via .zip fallback: %s\n", zip_buffer);
-         return out;
-      }
-   }
-
    /* Fallback: If exact open fails, try resolving case-insensitively */
    if (!out)
    {
@@ -408,6 +395,20 @@ FILE* osd_fopen(int pathtype, int pathindex, const char *filename, const char *m
 
    return out;
 }
+
+
+
+/***************************************************************************
+	mame_fopen_rom
+***************************************************************************/
+
+/* Similar to mame_fopen(,,FILETYPE_ROM), but lets you specify an expected checksum
+   (better encapsulation of the load by CRC used for ZIP files) */
+mame_file *mame_fopen_rom(const char *gamename, const char *filename, const char* exphash)
+{
+	return generic_fopen(FILETYPE_ROM, gamename, filename, exphash, FILEFLAG_OPENREAD | FILEFLAG_HASH);
+}
+
 
 /***************************************************************************
 	mame_fclose
