@@ -320,89 +320,89 @@ void run_game_done(void)
 static int init_machine(void)
 {
 
-	/* load the localization file */
-	if (uistring_init(options.language_file) != 0)
-	{
-		log_cb(RETRO_LOG_ERROR, LOGPRE "uistring_init failed\n");
-		goto cant_load_language_file;
-	}
+    /* load the localization file */
+    if (uistring_init(options.language_file) != 0)
+    {
+        log_cb(RETRO_LOG_ERROR, LOGPRE "uistring_init failed\n");
+        goto cant_load_language_file;
+    }
 
-	/* initialize the input system */
-	if (code_init() != 0)
-	{
-		log_cb(RETRO_LOG_ERROR, LOGPRE "code_init failed\n");
-		goto cant_init_input;
-	}
+    /* initialize the input system */
+    if (code_init() != 0)
+    {
+        log_cb(RETRO_LOG_ERROR, LOGPRE "code_init failed\n");
+        goto cant_init_input;
+    }
 
-	/* if we have inputs, process them now */
-	if (gamedrv->input_ports)
-	{
-		/* allocate input ports */
-		Machine->input_ports = input_port_allocate(gamedrv->input_ports);
-		if (!Machine->input_ports)
-		{
-			log_cb(RETRO_LOG_ERROR, LOGPRE "could not allocate Machine->input_ports\n");
-			goto cant_allocate_input_ports;
-		}
+    /* if we have inputs, process them now */
+    if (gamedrv->input_ports)
+    {
+        /* allocate input ports */
+        Machine->input_ports = input_port_allocate(gamedrv->input_ports);
+        if (!Machine->input_ports)
+        {
+            log_cb(RETRO_LOG_ERROR, LOGPRE "could not allocate Machine->input_ports\n");
+            goto cant_allocate_input_ports;
+        }
 
-		/* allocate default input ports */
-		Machine->input_ports_default = input_port_allocate(gamedrv->input_ports);
-		if (!Machine->input_ports_default)
-		{
-			log_cb(RETRO_LOG_ERROR, LOGPRE "could not allocate Machine->input_ports_default\n");
-			goto cant_allocate_input_ports_default;
-		}
-	}
+        /* allocate default input ports */
+        Machine->input_ports_default = input_port_allocate(gamedrv->input_ports);
+        if (!Machine->input_ports_default)
+        {
+            log_cb(RETRO_LOG_ERROR, LOGPRE "could not allocate Machine->input_ports_default\n");
+            goto cant_allocate_input_ports_default;
+        }
+    }
 
-	/* init the hard drive interface now, before attempting to load */
-	chd_set_interface(&mame_chd_interface);
+    /* init the hard drive interface now, before attempting to load */
+    chd_set_interface(&mame_chd_interface);
 
-	/* load the ROMs if we have some */
-	if (gamedrv->rom && rom_load(gamedrv->rom) != 0)
-	{
-		log_cb(RETRO_LOG_ERROR, LOGPRE "readroms failed\n");
-		goto cant_load_roms;
-	}
+    /* load the ROMs if we have some */
+    if (gamedrv->rom && rom_load(gamedrv->rom) != 0)
+    {
+        log_cb(RETRO_LOG_ERROR, LOGPRE "readroms failed for romset: %s\n", options.romset_filename_noext ? options.romset_filename_noext : "unknown");
+        goto cant_load_roms;
+    }
 
-	/* first init the timers; some CPUs have built-in timers and will need */
-	/* to allocate them up front */
-	timer_init();
-	cpu_init_refresh_timer();
+    /* first init the timers; some CPUs have built-in timers and will need */
+    /* to allocate them up front */
+    timer_init();
+    cpu_init_refresh_timer();
 
-	/* now set up all the CPUs */
-	cpu_init();
+    /* now set up all the CPUs */
+    cpu_init();
 
-	/* load input ports settings (keys, dip switches, and so on) */
-	settingsloaded = load_input_port_settings();
+    /* load input ports settings (keys, dip switches, and so on) */
+    settingsloaded = load_input_port_settings();
 
-	/* multi-session safety - set spriteram size to zero before memory map is set up */
-	spriteram_size = spriteram_2_size = 0;
+    /* multi-session safety - set spriteram size to zero before memory map is set up */
+    spriteram_size = spriteram_2_size = 0;
 
-	/* initialize the memory system for this game */
-	if (!memory_init())
-	{
-		log_cb(RETRO_LOG_ERROR, LOGPRE "memory_init failed\n");
-		goto cant_init_memory;
-	}
+    /* initialize the memory system for this game */
+    if (!memory_init())
+    {
+        log_cb(RETRO_LOG_ERROR, LOGPRE "memory_init failed\n");
+        goto cant_init_memory;
+    }
 
-	/* call the game driver's init function */
-	if (gamedrv->driver_init)
-		(*gamedrv->driver_init)();
+    /* call the game driver's init function */
+    if (gamedrv->driver_init)
+        (*gamedrv->driver_init)();
 
-	return 0;
+    return 0;
 
 cant_init_memory:
 cant_load_roms:
-	input_port_free(Machine->input_ports_default);
-	Machine->input_ports_default = 0;
+    input_port_free(Machine->input_ports_default);
+    Machine->input_ports_default = 0;
 cant_allocate_input_ports_default:
-	input_port_free(Machine->input_ports);
-	Machine->input_ports = 0;
+    input_port_free(Machine->input_ports);
+    Machine->input_ports = 0;
 cant_allocate_input_ports:
-	code_close();
+    code_close();
 cant_init_input:
 cant_load_language_file:
-	return 1;
+    return 1;
 }
 
 
