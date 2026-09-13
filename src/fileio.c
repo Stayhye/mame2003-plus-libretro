@@ -993,12 +993,6 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
     char tempname[256];
     char zip_gamename[512];
 
-    if (pathtype == FILETYPE_ROM && gamename && !strchr(gamename, '.'))
-    {
-        snprintf(zip_gamename, sizeof(zip_gamename), "%s.zip", gamename);
-        gamename = zip_gamename;
-    }
-
     log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) (pathtype:%d, gamename:%s, filename:%s, extension:%s, flags:%X)\n", pathtype, gamename, filename, extension, flags);
 
     /* reset the file handle */
