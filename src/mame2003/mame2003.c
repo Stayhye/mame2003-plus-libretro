@@ -255,10 +255,17 @@ bool retro_load_game(const struct retro_game_info *game)
     return false;
   }
   log_cb(RETRO_LOG_INFO, LOGPRE "Git Version %s\n",GIT_VERSION);
-  driver_lookup = strdup(path_basename(game->path));
+
+  // PS2 specific VFS and path separator safeguard
+  const char *basename_ptr = path_basename(game->path);
+  char *colon_check = strrchr(basename_ptr, ':');
+  if (colon_check)
+    basename_ptr = colon_check + 1;
+
+  driver_lookup = strdup(basename_ptr);
   path_remove_extension(driver_lookup);
 
-  log_cb(RETRO_LOG_INFO, LOGPRE "Content lookup name: %s\n", driver_lookup);
+  log_cb(RETRO_LOG_INFO, LOGPRE "PS2 Sanitized Lookup: [%s]\n", driver_lookup);
 
   for (driverIndex = 0; driverIndex < total_drivers; driverIndex++)
   {
@@ -271,11 +278,12 @@ bool retro_load_game(const struct retro_game_info *game)
       options.romset_filename_noext = driver_lookup;
       break;
     }
-    if(driverIndex == total_drivers -2) /* we could fix the total drives in drivers c but the it pointless its taken into account here */
-    {
-      log_cb(RETRO_LOG_ERROR, LOGPRE "Driver index counter: %d. Game driver not found for %s!\n", driverIndex, driver_lookup);
-      return false;
-    }
+  }
+
+  if (game_driver == NULL)
+  {
+    log_cb(RETRO_LOG_ERROR, LOGPRE "Game driver not found for %s!\n", driver_lookup);
+    return false;
   }
 
   if(!init_game(driverIndex))
@@ -333,11 +341,10 @@ bool retro_load_game(const struct retro_game_info *game)
   environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)input_subdevice_ports);
 
   if(!run_game(driverIndex))
-    return true;
+    return false;
 
-  return false;
+  return true;
 }
-
 
 void retro_reset (void)
 {
