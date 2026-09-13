@@ -2149,13 +2149,13 @@ V-V                           TP-027
 	//DRIVER( willowje )	/*  6/1989 (c) 1989 (Japan) */
 	//DRIVER( unsquad )	/*  8/1989 (c) 1989 */
 	//DRIVER( area88 )	/*  8/1989 (c) 1989 */
-	//DRIVER( ffight )	/* 12/1989 (c) (World) */
+	DRIVER( ffight )	/* 12/1989 (c) (World) */
 	//DRIVER( ffightu )	/* 12/1989 (c) (US)    */
 	//DRIVER( ffightj )	/* 12/1989 (c) (Japan) */
 	//DRIVER( ffightj1 )	/* 12/1989 (c) (Japan) */
 	//DRIVER( ffightae )  /* 12/1989 (c) 1989 (World) 3P */
-	//DRIVER( 1941 )		/*  2/1990 (c) 1990 (World) */
-	//DRIVER( 1941j )		/*  2/1990 (c) 1990 (Japan) */
+	DRIVER( 1941 )		/*  2/1990 (c) 1990 (World) */
+	DRIVER( 1941j )		/*  2/1990 (c) 1990 (Japan) */
 	//DRIVER( mercs )		/* 02/03/1990 (c) 1990 (World) */
 	//DRIVER( mercsu )	/* 02/03/1990 (c) 1990 (US)    */
 	//DRIVER( mercsua )	/* 08/06/1990 (c) 1990 (US)    */
