@@ -241,6 +241,7 @@ bool retro_load_game(const struct retro_game_info *game)
   int   driverIndex    = 0;
   int   port_index;
   char  *driver_lookup = NULL;
+  char  *full_filename = NULL;
 
   if(string_is_empty(game->path))
   {
@@ -255,7 +256,9 @@ bool retro_load_game(const struct retro_game_info *game)
     return false;
   }
   log_cb(RETRO_LOG_INFO, LOGPRE "Git Version %s\n",GIT_VERSION);
-  driver_lookup = strdup(path_basename(game->path));
+
+  full_filename = strdup(path_basename(game->path));
+  driver_lookup = strdup(full_filename);
   path_remove_extension(driver_lookup);
 
   log_cb(RETRO_LOG_INFO, LOGPRE "Content lookup name: %s\n", driver_lookup);
@@ -268,15 +271,19 @@ bool retro_load_game(const struct retro_game_info *game)
     {
       log_cb(RETRO_LOG_INFO, LOGPRE "Driver index counter: %d. Matched game driver: %s\n",  driverIndex, needle->name);
       game_driver = needle;
-      options.romset_filename_noext = driver_lookup;
+      options.romset_filename_noext = full_filename;
       break;
     }
-    if(driverIndex == total_drivers -2) /* we could fix the total drives in drivers c but the it pointless its taken into account here */
+    if(driverIndex == total_drivers - 2) /* we could fix the total drives in drivers c but the it pointless its taken into account here */
     {
       log_cb(RETRO_LOG_ERROR, LOGPRE "Driver index counter: %d. Game driver not found for %s!\n", driverIndex, driver_lookup);
+      free(full_filename);
+      free(driver_lookup);
       return false;
     }
   }
+
+  free(driver_lookup);
 
   if(!init_game(driverIndex))
     return false;
