@@ -1032,59 +1032,49 @@ static mame_file *generic_fopen(int pathtype, const char *gamename, const char *
         
         /* ----------------- STEP 1: OPEN THE FILE RAW -------------------- */
 
-        /* first look for path/gamename as a directory */
-        compose_path(name, gamename, NULL, NULL);
-        log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s\n", name);
-
-
-        /* if the directory exists, proceed */
-        if (*name == 0 || osd_get_path_info(pathtype, pathindex, name) == PATH_IS_DIRECTORY)
+        /* Skip loose directory checks for ROMs to prevent VFS hangs and force archive container lookup */
+        if (pathtype != FILETYPE_ROM)
         {
-            log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) directory exists: %s\n", name);
-            /* now look for path/gamename/filename.ext */
-            compose_path(name, gamename, filename, extension);
+            /* first look for path/gamename as a directory */
+            compose_path(name, gamename, NULL, NULL);
+            log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s\n", name);
 
-            /* if we need checksums, load it into RAM and compute it along the way */
-            if (flags & FILEFLAG_HASH)
+
+            /* if the directory exists, proceed */
+            if (*name == 0 || osd_get_path_info(pathtype, pathindex, name) == PATH_IS_DIRECTORY)
             {
-                if (checksum_file(pathtype, pathindex, name, &file.data, &file.length, file.hash) == 0)
+                log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) directory exists: %s\n", name);
+                /* now look for path/gamename/filename.ext */
+                compose_path(name, gamename, filename, extension);
+
+                /* if we need checksums, load it into RAM and compute it along the way */
+                if (flags & FILEFLAG_HASH)
                 {
-                    file.type = RAM_FILE;
-                    break;
+                    if (checksum_file(pathtype, pathindex, name, &file.data, &file.length, file.hash) == 0)
+                    {
+                        file.type = RAM_FILE;
+                        break;
+                    }
+                }
+
+                /* otherwise, just open it straight */
+                else
+                {
+                    log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) using osd_fopen %s\n", name);
+                    file.type = PLAIN_FILE;
+                    file.file = osd_fopen(pathtype, pathindex, name, access_modes[flags & 3]);
+                    if (file.file == NULL && (flags & 3) == 3)
+                        file.file = osd_fopen(pathtype, pathindex, name, "w+b");
+                    if (file.file != NULL)
+                        break;
                 }
             }
-
-            /* otherwise, just open it straight */
-            else
-            {
-                log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) using osd_fopen %s\n", name);
-                file.type = PLAIN_FILE;
-                file.file = osd_fopen(pathtype, pathindex, name, access_modes[flags & 3]);
-                if (file.file == NULL && (flags & 3) == 3)
-                    file.file = osd_fopen(pathtype, pathindex, name, "w+b");
-                if (file.file != NULL)
-                    break;
-            }
-
-
         }
-
         /* ----------------- STEP 2: OPEN THE FILE IN A ZIP -------------------- */
-
-        /* now look for it within a ZIP file */
         if (!(flags & (FILEFLAG_OPENWRITE | FILEFLAG_NOZIP)))
         {
-            char zip_gamename[PATH_MAX_LENGTH];
-            const char *zip_target = gamename;
-
-            if (pathtype == FILETYPE_ROM && !strchr(gamename, '.'))
-            {
-                snprintf(zip_gamename, sizeof(zip_gamename), "%s.zip", gamename);
-                zip_target = zip_gamename;
-            }
-
-            /* first look for path/gamename.zip (passing NULL as extension since .zip is in the name) */
-            compose_path(name, zip_target, NULL, NULL);
+            /* first look for path/gamename.zip */
+            compose_path(name, gamename, NULL, "zip");
             log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s file\n", name);
 
             /* if the ZIP file exists, proceed */
