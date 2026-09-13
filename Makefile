@@ -173,12 +173,14 @@ else ifeq ($(platform), tvos-arm64)
 # PS2
 else ifeq ($(platform), ps2)
    TARGET := $(TARGET_NAME)_libretro_$(platform).a
-   CC = ee-gcc$(EXE_EXT)
-   CXX = ee-g++$(EXE_EXT)
-   AR = ee-ar$(EXE_EXT)
-   FLAGS += -DPS2 -G0 -DABGR1555
-   STATIC_LINKING = 1
-   STATIC_LINKING_LINK = 1
+   CC = mips64r5900el-ps2-elf-gcc
+   CXX = mips64r5900el-ps2-elf-g++
+   AR = mips64r5900el-ps2-elf-ar
+   CFLAGS += -O3 -march=r5900 -mtune=r5900 -G0 -ffast-math -fomit-frame-pointer -DPS2 -DABGR1555
+   CXXFLAGS += -O3 -march=r5900 -mtune=r5900 -G0 -ffast-math -fomit-frame-pointer -DPS2 -DABGR1555
+   LDFLAGS += 
+   STATIC_LINKING=1
+   PLATFORM_DEFINES := -DPS2 -DVIDEO_ABGR1555 -DIOAPI_NO_64
    FRONTEND_SUPPORTS_RGB565 = 0
 
 # Raspberry Pi 0
