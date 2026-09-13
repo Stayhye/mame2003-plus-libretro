@@ -272,21 +272,27 @@ bool init_game(int game)
 
 bool run_game(int game)
 {
-	init_game_options();
+    init_game_options();
 
-	/* here's the meat of it all */
-	bailing = 0;
+    /* here's the meat of it all */
+    bailing = 0;
 
   begin_resource_tracking();
 
   /* finish setting up our local machine */
   if (init_machine())
+  {
+      log_cb(RETRO_LOG_ERROR, LOGPRE "CRASH POINT: init_machine() failed\n");
       bail_and_print("Unable to initialize machine emulation");
+  }
   else
   {
   /* then run it */
       if (run_machine())
+      {
+          log_cb(RETRO_LOG_ERROR, LOGPRE "CRASH POINT: run_machine() failed\n");
           bail_and_print("Unable to start machine emulation");
+      }
       else
       {
          game_loaded = 1;
@@ -299,15 +305,14 @@ bool run_game(int game)
   /* stop tracking resources and exit the OSD layer */
   end_resource_tracking();
 
-	return 1;
+    return 1;
 }
 
 void run_game_done(void)
 {
-	shutdown_machine();
-	end_resource_tracking();
+    shutdown_machine();
+    end_resource_tracking();
 }
-
 /*-------------------------------------------------
 	init_machine - initialize the emulated machine
 -------------------------------------------------*/
