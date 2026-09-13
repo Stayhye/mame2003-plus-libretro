@@ -981,205 +981,205 @@ const char *get_extension_for_filetype(int filetype)
 
 
 /***************************************************************************
-	generic_fopen
+    generic_fopen
 ***************************************************************************/
-
 static mame_file *generic_fopen(int pathtype, const char *gamename, const char *filename, const char* hash, UINT32 flags)
 {
-	static const char *access_modes[] = { "rb", "rb", "wb", "r+b" };
-	const char *extension = get_extension_for_filetype(pathtype);
-	int pathcount = osd_get_path_count(pathtype);
-	int pathindex, pathstart, pathstop, pathinc;
-	mame_file file, *newfile;
-	char tempname[256];
+    static const char *access_modes[] = { "rb", "rb", "wb", "r+b" };
+    const char *extension = get_extension_for_filetype(pathtype);
+    int pathcount = osd_get_path_count(pathtype);
+    int pathindex, pathstart, pathstop, pathinc;
+    mame_file file, *newfile;
+    char tempname[256];
+    char zip_gamename[512];
 
-	log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) (pathtype:%d, gamename:%s, filename:%s, extension:%s, flags:%X)\n", pathtype, gamename, filename, extension, flags);
+    if (pathtype == FILETYPE_ROM && gamename && !strchr(gamename, '.'))
+    {
+        snprintf(zip_gamename, sizeof(zip_gamename), "%s.zip", gamename);
+        gamename = zip_gamename;
+    }
 
-	/* reset the file handle */
-	memset(&file, 0, sizeof(file));
+    log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) (pathtype:%d, gamename:%s, filename:%s, extension:%s, flags:%X)\n", pathtype, gamename, filename, extension, flags);
 
-	/* check for incompatible flags */
-	if ((flags & FILEFLAG_OPENWRITE) && (flags & FILEFLAG_HASH))
-		fprintf(stderr, "Can't use HASH option with WRITE option in generic_fopen!\n");
+    /* reset the file handle */
+    memset(&file, 0, sizeof(file));
 
-	/* determine start/stop based on reverse search flag */
-	if (!(flags & FILEFLAG_REVERSE_SEARCH))
-	{
-		pathstart = 0;
-		pathstop = pathcount;
-		pathinc = 1;
-	}
-	else
-	{
-		pathstart = pathcount - 1;
-		pathstop = -1;
-		pathinc = -1;
-	}
+    /* check for incompatible flags */
+    if ((flags & FILEFLAG_OPENWRITE) && (flags & FILEFLAG_HASH))
+        fprintf(stderr, "Can't use HASH option with WRITE option in generic_fopen!\n");
 
-	/* loop over paths */
-	for (pathindex = pathstart; pathindex != pathstop; pathindex += pathinc)
-	{
-		char name[PATH_MAX_LENGTH];
-	
-	/* Inside generic_fopen in fileio.c, when handling roms/archives: */
-	if (filetype == FILETYPE_ROM && gamename && !strchr(gamename, '.'))
-	{
-		char zip_gamename[512];
-		snprintf(zip_gamename, sizeof(zip_gamename), "%s.zip", gamename);
-		gamename = zip_gamename;
-	}
-		/* ----------------- STEP 1: OPEN THE FILE RAW -------------------- */
+    /* determine start/stop based on reverse search flag */
+    if (!(flags & FILEFLAG_REVERSE_SEARCH))
+    {
+        pathstart = 0;
+        pathstop = pathcount;
+        pathinc = 1;
+    }
+    else
+    {
+        pathstart = pathcount - 1;
+        pathstop = -1;
+        pathinc = -1;
+    }
 
-		/* first look for path/gamename as a directory */
-		compose_path(name, gamename, NULL, NULL);
-		log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s\n", name);
+    /* loop over paths */
+    for (pathindex = pathstart; pathindex != pathstop; pathindex += pathinc)
+    {
+        char name[PATH_MAX_LENGTH];
+    
+        
+        /* ----------------- STEP 1: OPEN THE FILE RAW -------------------- */
 
-
-		/* if the directory exists, proceed */
-		if (*name == 0 || osd_get_path_info(pathtype, pathindex, name) == PATH_IS_DIRECTORY)
-		{
-			log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) directory exists: %s\n", name);
-			/* now look for path/gamename/filename.ext */
-			compose_path(name, gamename, filename, extension);
-
-			/* if we need checksums, load it into RAM and compute it along the way */
-			if (flags & FILEFLAG_HASH)
-			{
-				if (checksum_file(pathtype, pathindex, name, &file.data, &file.length, file.hash) == 0)
-				{
-					file.type = RAM_FILE;
-					break;
-				}
-			}
-
-			/* otherwise, just open it straight */
-			else
-			{
-				log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) using osd_fopen %s\n", name);
-				file.type = PLAIN_FILE;
-				file.file = osd_fopen(pathtype, pathindex, name, access_modes[flags & 3]);
-				if (file.file == NULL && (flags & 3) == 3)
-					file.file = osd_fopen(pathtype, pathindex, name, "w+b");
-				if (file.file != NULL)
-					break;
-			}
+        /* first look for path/gamename as a directory */
+        compose_path(name, gamename, NULL, NULL);
+        log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s\n", name);
 
 
-		}
+        /* if the directory exists, proceed */
+        if (*name == 0 || osd_get_path_info(pathtype, pathindex, name) == PATH_IS_DIRECTORY)
+        {
+            log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) directory exists: %s\n", name);
+            /* now look for path/gamename/filename.ext */
+            compose_path(name, gamename, filename, extension);
 
-		/* ----------------- STEP 2: OPEN THE FILE IN A ZIP -------------------- */
+            /* if we need checksums, load it into RAM and compute it along the way */
+            if (flags & FILEFLAG_HASH)
+            {
+                if (checksum_file(pathtype, pathindex, name, &file.data, &file.length, file.hash) == 0)
+                {
+                    file.type = RAM_FILE;
+                    break;
+                }
+            }
 
-		/* now look for it within a ZIP file */
-		if (!(flags & (FILEFLAG_OPENWRITE | FILEFLAG_NOZIP)))
-		{
-			/* first look for path/gamename.zip */
-			compose_path(name, gamename, NULL, "zip");
-			log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s file\n", name);
+            /* otherwise, just open it straight */
+            else
+            {
+                log_cb(RETRO_LOG_DEBUG, LOGPRE "(generic_fopen) using osd_fopen %s\n", name);
+                file.type = PLAIN_FILE;
+                file.file = osd_fopen(pathtype, pathindex, name, access_modes[flags & 3]);
+                if (file.file == NULL && (flags & 3) == 3)
+                    file.file = osd_fopen(pathtype, pathindex, name, "w+b");
+                if (file.file != NULL)
+                    break;
+            }
 
-			/* if the ZIP file exists, proceed */
-			if (osd_get_path_info(pathtype, pathindex, name) == PATH_IS_FILE)
-			{
-				UINT32 ziplength;
 
-				/* if the file was able to be extracted from the ZIP, continue */
-				compose_path(tempname, NULL, filename, extension);
+        }
 
-				/* verify-only case */
-				if (flags & FILEFLAG_VERIFY_ONLY)
-				{
-					UINT8 crcs[4];
-					UINT32 crc = 0;
+        /* ----------------- STEP 2: OPEN THE FILE IN A ZIP -------------------- */
 
-					/* Since this is a .ZIP file, we extract the CRC from the expected hash
-					   (if any), so that we can load by CRC if needed. We must check that
-					   the hash really contains a CRC, because it could be a NO_DUMP rom
-					   for which we do not know the CRC yet. */
-					if (hash && hash_data_extract_binary_checksum(hash, HASH_CRC, crcs) != 0)
-					{
-						/* Store the CRC in a single DWORD */
-						crc = ((unsigned long)crcs[0] << 24) |
-							  ((unsigned long)crcs[1] << 16) |
-							  ((unsigned long)crcs[2] <<  8) |
-							  ((unsigned long)crcs[3] <<  0);
-					}
+        /* now look for it within a ZIP file */
+        if (!(flags & (FILEFLAG_OPENWRITE | FILEFLAG_NOZIP)))
+        {
+            /* first look for path/gamename.zip */
+            compose_path(name, gamename, NULL, "zip");
+            log_cb(RETRO_LOG_DEBUG, LOGPRE "Trying %s file\n", name);
 
-					hash_data_clear(file.hash);
+            /* if the ZIP file exists, proceed */
+            if (osd_get_path_info(pathtype, pathindex, name) == PATH_IS_FILE)
+            {
+                UINT32 ziplength;
 
-					if (checksum_zipped_file(pathtype, pathindex, name, tempname, &ziplength, &crc) == 0)
-					{
-						file.length = ziplength;
-						file.type = UNLOADED_ZIPPED_FILE;
+                /* if the file was able to be extracted from the ZIP, continue */
+                compose_path(tempname, NULL, filename, extension);
 
-						crcs[0] = (UINT8)(crc >> 24);
-						crcs[1] = (UINT8)(crc >> 16);
-						crcs[2] = (UINT8)(crc >> 8);
-						crcs[3] = (UINT8)(crc >> 0);
-						hash_data_insert_binary_checksum(file.hash, HASH_CRC, crcs);
-						break;
-					}
-				}
+                /* verify-only case */
+                if (flags & FILEFLAG_VERIFY_ONLY)
+                {
+                    UINT8 crcs[4];
+                    UINT32 crc = 0;
 
-				/* full load case */
-				else
-				{
-					int err;
+                    /* Since this is a .ZIP file, we extract the CRC from the expected hash
+                       (if any), so that we can load by CRC if needed. We must check that
+                       the hash really contains a CRC, because it could be a NO_DUMP rom
+                       for which we do not know the CRC yet. */
+                    if (hash && hash_data_extract_binary_checksum(hash, HASH_CRC, crcs) != 0)
+                    {
+                        /* Store the CRC in a single DWORD */
+                        vcrC = ((unsigned long)crcs[0] << 24) |
+                            ((unsigned long)crcs[1] << 16) |
+                            ((unsigned long)crcs[2] <<  8) |
+                            ((unsigned long)crcs[3] <<  0);
+                    }
 
-					/* Try loading the file */
-					err = load_zipped_file(pathtype, pathindex, name, tempname, &file.data, &ziplength);
+                    hash_data_clear(file.hash);
 
-					/* If it failed, since this is a ZIP file, we can try to load by CRC
-					   if an expected hash has been provided. unzip.c uses this ugly hack
-					   of specifying the CRC as filename. */
-					if (err && hash)
-					{
-						char crcn[9];
+                    if (checksum_zipped_file(pathtype, pathindex, name, tempname, &ziplength, &crc) == 0)
+                    {
+                        file.length = ziplength;
+                        file.type = UNLOADED_ZIPPED_FILE;
 
-						hash_data_extract_printable_checksum(hash, HASH_CRC, crcn);
+                        crcs[0] = (UINT8)(crc >> 24);
+                        crcs[1] = (UINT8)(crc >> 16);
+                        crcs[2] = (UINT8)(crc >> 8);
+                        crcs[3] = (UINT8)(crc >> 0);
+                        hash_data_insert_binary_checksum(file.hash, HASH_CRC, crcs);
+                        break;
+                    }
+                }
 
-						err = load_zipped_file(pathtype, pathindex, name, crcn, &file.data, &ziplength);
-					}
+                /* full load case */
+                else
+                {
+                    int err;
 
-					if (err == 0)
-					{
-						unsigned functions;
+                    /* Try loading the file */
+                    err = load_zipped_file(pathtype, pathindex, name, tempname, &file.data, &ziplength);
 
-						log_cb(RETRO_LOG_DEBUG, LOGPRE "Using (mame_fopen) zip file for %s\n", filename);
-						file.length = ziplength;
-						file.type = ZIPPED_FILE;
+                    /* If it failed, since this is a ZIP file, we can try to load by CRC
+                       if an expected hash has been provided. unzip.c uses this ugly hack
+                       of specifying the CRC as filename. */
+                    if (err && hash)
+                    {
+                        char crcn[9];
 
-						/* Since we already loaded the file, we can easily calculate the
-						   checksum of all the functions. In practice, we use only the
-						   functions for which we have an expected checksum to compare with. */
-						functions = hash_data_used_functions(hash);
+                        hash_data_extract_printable_checksum(hash, HASH_CRC, crcn);
 
-						/* If user asked for CRC only, and there is an expected checksum
-						   for CRC in the driver, compute only CRC. */
-						if (options.crc_only && (functions & HASH_CRC))
-							functions = HASH_CRC;
+                        err = load_zipped_file(pathtype, pathindex, name, crcn, &file.data, &ziplength);
+                    }
 
-						hash_compute(file.hash, file.data, file.length, functions);
-						break;
-					}
-				}
-			}
-		}
-	}
+                    if (err == 0)
+                    {
+                        unsigned functions;
 
-	/* if we didn't succeed, just return NULL */
-	if (pathindex == pathstop)
-		return NULL;
+                        log_cb(RETRO_LOG_DEBUG, LOGPRE "Using (mame_fopen) zip file for %s\n", filename);
+                        file.length = ziplength;
+                        file.type = ZIPPED_FILE;
 
-	/* otherwise, duplicate the file */
-	newfile = malloc(sizeof(file));
-	if (newfile)
-	{
-		*newfile = file;
+                        /* Since we already loaded the file, we can easily calculate the
+                            checksum of all the functions. In practice, we use only the
+                            functions for which we have an expected checksum to compare with. */
+                        functions = hash_data_used_functions(hash);
+
+                        /* If user asked for CRC only, and there is an expected checksum
+                            for CRC in the driver, compute only CRC. */
+                        if (options.crc_only && (functions & HASH_CRC))
+                            functions = HASH_CRC;
+
+                        hash_compute(file.hash, file.data, file.length, functions);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /* if we didn't succeed, just return NULL */
+    if (pathindex == pathstop)
+        return NULL;
+
+    /* otherwise, duplicate the file */
+    newfile = malloc(sizeof(file));
+    if (newfile)
+    {
+        *newfile = file;
 #ifdef DEBUG_COOKIE
-		newfile->debug_cookie = DEBUG_COOKIE;
+        newfile->debug_cookie = DEBUG_COOKIE;
 #endif
-	}
+    }
 
-	return newfile;
+    return newfile;
 }
 
 
